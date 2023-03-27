@@ -3,9 +3,14 @@ module Eval where
 import Exp
 import Data.List ( union, delete )
 
-vars :: Exp -> [IndexedVar]
-vars = undefined
 
+
+vars :: Exp -> [IndexedVar]
+vars (X exp) =  [exp]
+vars (Lam var exp) 
+ |elem var (vars exp) = []
+ |otherwise = [var] ++ (vars exp)
+vars (App exp1 exp2) = (vars exp1) ++ (vars exp2)
 -- >>> vars (Lam (makeIndexedVar "x") (X (makeIndexedVar "y")))
 -- [IndexedVar {ivName = "x", ivCount = 0},IndexedVar {ivName = "y", ivCount = 0}]
 
@@ -16,7 +21,11 @@ vars = undefined
 -- [IndexedVar {ivName = "x", ivCount = 0}]
 
 freeVars :: Exp -> [IndexedVar]
-freeVars = undefined
+freeVars (X exp) = [exp]
+freeVars (Lam var exp) 
+ |elem var (freeVars exp) = filter (\x -> x /= var) (freeVars exp)
+ |otherwise = (freeVars exp)
+freeVars (App exp1 exp2) = (freeVars exp1) ++ (freeVars exp2)
 
 -- >>> freeVars (Lam (makeIndexedVar "x") (X (makeIndexedVar "y")))
 -- [IndexedVar {ivName = "y", ivCount = 0}]
@@ -31,7 +40,9 @@ freeVars = undefined
 -- []
 
 occursFree :: IndexedVar -> Exp -> Bool
-occursFree = undefined
+occursFree indv exp 
+ |elem indv (freeVars exp) = True
+ |otherwise = False
 
 -- >>> makeIndexedVar "x" `occursFree` Lam (makeIndexedVar "x") (X (makeIndexedVar "y"))
 -- False
